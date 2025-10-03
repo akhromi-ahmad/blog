@@ -23,16 +23,23 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
 
-        /* Animated gradient background */
-        #gradient-background {
+        /* Smooth gradient background using opacity crossfade */
+        #gradient-background, #gradient-background-next {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: background 2s ease-in-out;
+            transition: opacity 2s cubic-bezier(.4,0,.2,1);
+            will-change: opacity;
+            pointer-events: none;
+        }
+        #gradient-background {
+            opacity: 1;
+        }
+        #gradient-background-next {
+            opacity: 0;
         }
 
         /* Container for time and date */
@@ -111,8 +118,9 @@
     </style>
 </head>
 <body>
-    <!-- Animated gradient background -->
+    <!-- Animated gradient backgrounds (crossfade for smoothness) -->
     <div id="gradient-background"></div>
+    <div id="gradient-background-next"></div>
     
     <!-- Time and Date Display -->
     <div class="container-fluid">
@@ -147,15 +155,29 @@
         ];
 
         let currentGradientIndex = 0;
-        const gradientBackground = document.getElementById('gradient-background');
+        const gradientBg = document.getElementById('gradient-background');
+        const gradientBgNext = document.getElementById('gradient-background-next');
 
-        // Change gradient every 5 seconds
-        function changeGradient() {
+        // Initialize background
+        gradientBg.style.background = gradients[currentGradientIndex];
+        gradientBgNext.style.background = gradients[(currentGradientIndex + 1) % gradients.length];
+
+        function crossfadeGradient() {
             currentGradientIndex = (currentGradientIndex + 1) % gradients.length;
-            gradientBackground.style.background = gradients[currentGradientIndex];
+            // Prepare next gradient
+            gradientBgNext.style.background = gradients[currentGradientIndex];
+            gradientBgNext.style.opacity = "1";
+            // Fade out previous
+            gradientBg.style.opacity = "0";
+            // After transition, swap backgrounds
+            setTimeout(() => {
+                gradientBg.style.background = gradients[currentGradientIndex];
+                gradientBg.style.opacity = "1";
+                gradientBgNext.style.opacity = "0";
+            }, 2000); // transition duration matches CSS
         }
 
-        setInterval(changeGradient, 5000);
+        setInterval(crossfadeGradient, 5000);
 
         // Update time and date
         function updateTime() {
